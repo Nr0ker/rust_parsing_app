@@ -1,0 +1,22 @@
+Don't stop at the first already-seen item
+One listing might have been sold and a new one appeared in its slot. If you stop at the first match, you'll miss genuinely new listings further down.
+
+Better rule: stop after N consecutive already-seen items (pick 3 or 5). If you see 3 in a row that you already have, the rest of the page is almost certainly old too. Reset the counter whenever you hit a new one.
+
+
+
+id is THE LINK
+
+add timestamp when was something parsed(listing)
+
+if seen_set.contains(&link) {
+    skip (don't fetch, don't push to to_json)
+} else {
+    fetch, parse, push to to_json, insert link into seen_set
+}
+
+
+
+Load existing raw_data.json → Vec<Listing> like a seen.json
+Build a HashSet<String> from the .link fields
+At the end: extend the old vec with new items, write back or extend it not at the end but rather in the beginning

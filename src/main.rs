@@ -1,5 +1,3 @@
-use std::fs;
-
 use serde::{Serialize, Deserialize};
 use reqwest;
 use scraper::{Html, Selector};
@@ -7,7 +5,6 @@ use serde_json;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct JsonStructure {
-    placement: i32,
     title: String,
     price: String,
     description: String,
@@ -20,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // https://www.kleinanzeigen.de/s-pcs/wuerzburg/seite:2/c228l7667r10
 // https://www.kleinanzeigen.de/s-pcs/wuerzburg/c228l7667r10
    
-
+//calendarOutline
     
 
     let mut to_json: Vec<JsonStructure> = vec![]; // making a to_json variable so later on i can write the response from the next code to json
@@ -28,11 +25,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // reading json file
     // let json_content = fs::read_to_string("data.json").unwrap();
     // let json_read_content: Vec<JsonStructure> = serde_json::from_str(&json_content).unwrap(); 
-
     // getting the link and the status
     for i in 1..6{
-
-        let mut placement: i32 = 0;
 
         
         let url = format!("https://www.kleinanzeigen.de/s-pcs/wuerzburg/seite:{}/c228l7667r10", i);
@@ -46,6 +40,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // website block
         let document = Html::parse_document(&response_text); // parsing hrmnl as document
         let selector = Selector::parse("article h3 a").unwrap(); // making selector argument 
+
+
         for link in document.select(&selector){
 
             
@@ -75,8 +71,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let article_body_price= article_document.select(&article_price_selector).next().unwrap();
             let article_price: String = article_body_price.text().collect();
 
-            placement += 1;
-            to_json.push(JsonStructure{placement: placement, title: text, price: article_price, description: article_desc, link: article_full_url}) // write data to to_json variable
+            // // looking for upload date
+            // let select_article_upload_date = Selector::parse( "#viewad-main-info > div.flex.flex-col.gap-xxsmall > div:nth-child(2) > div > span").unwrap();
+            // let parse_article_upload_date = article_document.select(&select_article_upload_date)
+            // .next()
+            // .map(|el| el.text().collect())
+            // .unwrap_or_else(|| "N/A".to_string());
+            // // let article_upload_date: String = parse_article_upload_date.text().collect();
+            // print!("{parse_article_upload_date}");
+
+            to_json.push(JsonStructure{title: text, price: article_price, description: article_desc, link: article_full_url}) // write data to to_json variable
                 
           
 
@@ -84,15 +88,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    std::fs::write("data.json", serde_json::to_string_pretty(&to_json).unwrap()).unwrap(); // write to data.json file
-    
-    // // let body = document.select(&selector).next().unwrap(); // taking selected argument from the HTML
-    // let body_value = body.value().attr("href"); // picking what is needed aka "class" or "attribute"
-    // let body_text: String = body.text().collect(); // collecting the text of the article 
-
-    // println!("{:?}", body_value);
-    // println!("{:?}", body_text);
-
+    std::fs::write("raw_data.json", serde_json::to_string_pretty(&to_json).unwrap()).unwrap(); // write to data.json file
+  
  // # -> id . -> class
     
 
