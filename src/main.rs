@@ -4,13 +4,18 @@ use scraper::{Html, Selector};
 use serde_json;
 
 #[derive(Debug, Deserialize, Serialize)]
-struct JsonStructure {
+struct RawData {
     title: String,
     price: String,
     description: String,
     link: String
 }
 
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+struct GetArticleId {
+    link: String
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {   
 
@@ -20,8 +25,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 //calendarOutline
     
 
-    let mut to_json: Vec<JsonStructure> = vec![]; // making a to_json variable so later on i can write the response from the next code to json
-
+    let mut to_json: Vec<RawData> = vec![]; // making a to_json variable so later on i can write the response from the next code to json
+    let mut on_repeat: i8 = 0;
     // reading json file
     // let json_content = fs::read_to_string("data.json").unwrap();
     // let json_read_content: Vec<JsonStructure> = serde_json::from_str(&json_content).unwrap(); 
@@ -71,16 +76,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let article_body_price= article_document.select(&article_price_selector).next().unwrap();
             let article_price: String = article_body_price.text().collect();
 
-            // // looking for upload date
-            // let select_article_upload_date = Selector::parse( "#viewad-main-info > div.flex.flex-col.gap-xxsmall > div:nth-child(2) > div > span").unwrap();
-            // let parse_article_upload_date = article_document.select(&select_article_upload_date)
-            // .next()
-            // .map(|el| el.text().collect())
-            // .unwrap_or_else(|| "N/A".to_string());
-            // // let article_upload_date: String = parse_article_upload_date.text().collect();
-            // print!("{parse_article_upload_date}");
+            let existing_article_id: Vec<GetArticleId> = serde_json::from_str(&std::fs::read_to_string("raw_data.json")?)?;   
 
-            to_json.push(JsonStructure{title: text, price: article_price, description: article_desc, link: article_full_url}) // write data to to_json variable
+            if existing_article_id.iter().any(|x|x.link == article_full_url){
+                on_repeat += 1; // on_repeat is here to check if existing_article_id == article_full_url 3 times, so if found it doesnt do anything anymore
+                if on_repeat == 3{
+                     break;
+                }
+            }else{
+                to_json.push(RawData{title: text, price: article_price, description: article_desc, link: article_full_url}) // write data to to_json variable     
+            }
+
                 
           
 
@@ -89,6 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     std::fs::write("raw_data.json", serde_json::to_string_pretty(&to_json).unwrap()).unwrap(); // write to data.json file
+
   
  // # -> id . -> class
     
